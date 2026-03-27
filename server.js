@@ -8,11 +8,14 @@ const axios = require('axios');
 const app = express();
 
 app.use(bodyParser.urlencoded({ extended: true }));
+app.use('/assets', express.static(path.join(__dirname, 'assets')));
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'templates'));
 
 const instances = {}; 
 const ACTIVATION_TIMEOUT = 30000; // 30 secondi
+const pkg = require('./package.json');
+const VERSION = pkg.version;
 let sessionStatus = { error: null };
 
 // Default Games Mapping 
@@ -31,7 +34,8 @@ const GAME_MAP = {
 app.get('/', (req, res) => {
     res.render('index', { 
         instances: instances, 
-        session: sessionStatus 
+        session: sessionStatus,
+        version: VERSION
     });
 });
 
@@ -74,23 +78,28 @@ app.get('/api/status', (req, res) => {
     const now = Date.now();
 
     Object.keys(instances).forEach(user => {
-        // Logica di auto-rimozione se bloccato in attivazione
         if (!instances[user].running && (now - instances[user].initTime > ACTIVATION_TIMEOUT)) {
             console.log(`[SYSTEM] Timeout attivazione per ${user}. Rimozione.`);
             instances[user].client.logOff();
             delete instances[user];
         } else {
-            // Calcolo ore dinamico
-            let hours = "0.0";
+            let timeDisplay = "0.0h";
             if (instances[user].running && instances[user].startTime) {
-                hours = ((now - instances[user].startTime) / 3600000).toFixed(1);
+                const diffMs = now - instances[user].startTime;
+                const diffMins = Math.floor(diffMs / 60000);
+                
+                if (diffMins < 60) {
+                    timeDisplay = `${diffMins}m`;
+                } else {
+                    timeDisplay = `${(diffMs / 3600000).toFixed(1)}h`;
+                }
             }
             
             statusData[user] = {
                 status: instances[user].status,
                 color: instances[user].color,
                 running: instances[user].running,
-                hours: hours,
+                hours: timeDisplay,
                 startDate: instances[user].startDate,
                 games: instances[user].games
             };
@@ -104,12 +113,13 @@ app.post('/start', (req, res) => {
 
     if (instances[username]) {
         instances[username].client.logOff();
+        delete instances[username];
     }
 
     const client = new SteamUser();
     const selectedGames = Array.isArray(game_ids) ? game_ids : [game_ids];
+    const gameAppIds = selectedGames.map(id => parseInt(id));
     
-    // Gestione nomi: se è un gioco cercato, usiamo il nome inviato dal form
     const gameNames = selectedGames.map(id => {
         if (GAME_MAP[id]) return GAME_MAP[id];
         return (custom_names && custom_names[id]) ? custom_names[id] : `AppID: ${id}`;
@@ -119,39 +129,58 @@ app.post('/start', (req, res) => {
         client: client,
         games: gameNames,
         running: false,
-        status: "In attivazione...",
+        status: "Connecting...",
         color: "warning",
-        initTime: Date.now()
+        initTime: Date.now(),
+        startTime: null // Verrà popolato solo quando effettivamente in gioco
     };
+
+    client.on('steamGuard', (domain, callback) => {
+        console.log(`[ALERT] Codice Guard errato per ${username}.`);
+        if (instances[username]) {
+            instances[username].status = "Error: Invalid Guard Code";
+            instances[username].color = "danger";
+            instances[username].client.logOff();
+        }
+    });
 
     client.logOn({
         accountName: username,
         password: password,
-        twoFactorCode: auth_code.toUpperCase().trim()
+        twoFactorCode: auth_code ? auth_code.toUpperCase().trim() : null
     });
 
     client.on('loggedOn', () => {
-        const now = new Date();
-        instances[username].running = true;
-        instances[username].status = "In corso";
-        instances[username].color = "success";
-        instances[username].startTime = now.getTime(); 
-        instances[username].startDate = now.toLocaleString('it-IT', { 
-            day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' 
-        });
+        instances[username].status = "Logging in...";
         client.setPersona(SteamUser.EPersonaState.Online);
-        client.gamesPlayed(selectedGames.map(id => parseInt(id)));
+        client.gamesPlayed(gameAppIds);
     });
 
-    client.on('error', (err) => {
-        if (instances[username]) {
-            instances[username].running = false;
-            instances[username].status = "Errore: " + err.message;
-            instances[username].color = "danger";
+    client.on('playingState', (blocked, playingAppIds) => {
+        if (instances[username] && !instances[username].running) {
+            const now = new Date();
+            instances[username].running = true;
+            instances[username].status = "Running";
+            instances[username].color = "success";
+            instances[username].startTime = now.getTime(); // MOMENTO ESATTO START
+            instances[username].startDate = now.toLocaleString('it-IT', { 
+                day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' 
+            });
+            console.log(`[BOOSTER] ${username} ha iniziato il boost ora.`);
         }
     });
 
-    setTimeout(() => res.redirect('/'), 2000);
+    client.on('error', (err) => {
+        console.log(`[STEAM ERROR] ${username}: ${err.message}`);
+        if (instances[username]) {
+            instances[username].running = false;
+            instances[username].status = "Error: " + err.message;
+            instances[username].color = "danger";
+            instances[username].client.logOff();
+        }
+    });
+
+    setTimeout(() => res.redirect('/'), 1500);
 });
 
 app.post('/stop', (req, res) => {

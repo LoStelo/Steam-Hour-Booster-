@@ -11,46 +11,64 @@
         .form-control:focus, .form-select:focus { background-color: #2b2f32; color: white; border-color: #0d6efd; box-shadow: none; }
         .text-info-custom { color: #0dcaf0; font-weight: bold; }
         .card-custom { background-color: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); }
-        .version-badge { font-size: 0.5em; background-color: #0d6efd; padding: 2px 8px; border-radius: 4px; }
+        .version-badge { font-size: 0.5em; background-color: #0d6efd; padding: 2px 8px; border-radius: 4px; vertical-align: middle; }
         select[multiple] { height: 120px; }
         option:checked { background-color: #0d6efd !important; }
         .stat-box { background-color: rgba(0, 0, 0, 0.3); color: #adb5bd !important; border: 1px solid rgba(255, 255, 255, 0.05); padding: 8px; border-radius: 6px; }
         #searchResults { z-index: 1050; max-height: 250px; overflow-y: auto; }
         .search-item { cursor: pointer; border-bottom: 1px solid #3d4144; }
         .search-item:hover { background-color: #3d4144 !important; }
-        
-        /* Animazione per lo stato "In attivazione" */
+        #languageSelect { background-color: #2b2f32; color: white; border: 1px solid #495057; outline: none; }
         .status-pulse { animation: pulse-red 2s infinite; }
+        .dropdown-item { cursor: pointer; }
+        .dropdown-item:hover { background-color: #0d6efd !important; }
         @keyframes pulse-red { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
     </style>
 </head>
 <body class="p-4">
+    <div id="lang-switcher" class="dropdown" style="position: absolute; top: 20px; right: 20px; z-index: 1000;">
+        <button class="btn btn-dark btn-sm dropdown-toggle d-flex align-items-center gap-2 border-secondary" type="button" id="languageBtn" data-bs-toggle="dropdown" aria-expanded="false" style="background-color: #2b2f32;">
+            <img src="assets/it.png" id="currentFlag" style="width: 20px; border-radius: 2px;">
+            <span id="currentLangText">IT</span>
+        </button>
+        <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-end shadow" aria-labelledby="languageBtn">
+            <li>
+                <button class="dropdown-item d-flex align-items-center gap-2" type="button" onclick="changeLanguage('en')">
+                    <img src="assets/gb.png" style="width: 20px; border-radius: 2px;"> EN
+                </button>
+            </li>
+            <li>
+                <button class="dropdown-item d-flex align-items-center gap-2" type="button" onclick="changeLanguage('it')">
+                    <img src="assets/it.png" style="width: 20px; border-radius: 2px;"> IT
+                </button>
+            </li>
+        </ul>
+    </div>
+    
     <div class="container">
-        <h2 class="text-center mb-5">Steam Booster <span class="version-badge">v2.0</span></h2>
+        <h2 class="text-center mb-5">
+            Steam Booster <span class="version-badge">v<%= version %></span>
+        </h2>
 
         <div class="row">
             <div class="col-lg-4 mb-4">
                 <div class="card card-custom p-4 shadow">
-                    <h5 class="mb-3 text-info-custom text-center text-uppercase">Aggiungi Account</h5>
-                    
+                    <h5 class="mb-3 text-info-custom text-center text-uppercase" data-i18n="add_account">Add Account</h5>
                     <% if (session.error) { %>
                         <div class="alert alert-danger p-2 small text-center"><%= session.error %></div>
                     <% } %>
-
                     <form action="/start" method="post" id="mainForm">
                         <div class="mb-3">
-                            <input type="text" name="username" class="form-control mb-2" placeholder="Username Steam" required>
-                            <input type="password" name="password" class="form-control" placeholder="Password" required>
+                            <input type="text" name="username" class="form-control mb-2" data-i18n="ph_username" placeholder="Username" required>
+                            <input type="password" name="password" class="form-control" data-i18n="ph_password" placeholder="Password" required>
                         </div>
-
                         <div class="mb-3 text-center">
-                            <label class="small text-info-custom mb-1">Steam Guard</label>
+                            <label class="small text-info-custom mb-1" data-i18n="steam_guard">Steam Guard</label>
                             <input type="text" name="auth_code" class="form-control border-info text-center fw-bold text-uppercase" 
                                    placeholder="ABC12" minlength="5" maxlength="5" pattern="[a-zA-Z0-9]{5}" required>
                         </div>
-                        
                         <div class="mb-3">
-                            <label class="small text-secondary mb-1 d-block text-center">Giochi (CTRL per multipli)</label>
+                            <label class="small text-secondary mb-1 d-block text-center" data-i18n="games_label">Games (CTRL for multiple)</label>
                             <select name="game_ids" id="gameSelect" class="form-select mb-2" multiple required>
                                 <option value="252490">Rust</option>
                                 <option value="730">Counter-Strike 2</option>
@@ -62,16 +80,14 @@
                                 <option value="107410">Arma 3</option>
                                 <option value="2799860">Inazuma Eleven: Victory Road</option>
                             </select>
-
                             <div class="position-relative">
-                                <input type="text" id="gameSearchInput" class="form-control form-control-sm border-info" placeholder="🔍 Cerca altri giochi...">
+                                <input type="text" id="gameSearchInput" class="form-control form-control-sm border-info" data-i18n="ph_search" placeholder="🔍 Search...">
                                 <div id="searchResults" class="list-group position-absolute w-100 d-none shadow-lg"></div>
                             </div>
                             <div id="customNamesContainer"></div> 
                         </div>
-
                         <button type="submit" id="submitBtn" class="btn btn-primary w-100 fw-bold py-3 shadow d-flex align-items-center justify-content-center">
-                            <span id="btnText">AVVIA BOOST</span>
+                            <span id="btnText" data-i18n="btn_start">START BOOST</span>
                             <div id="btnSpinner" class="spinner-border spinner-border-sm ms-2" role="status" style="display: none;"></div>
                         </button>
                     </form>
@@ -79,42 +95,115 @@
             </div>
 
             <div class="col-lg-8">
-                <h5 class="mb-3 text-secondary text-uppercase small">Monitoraggio Live Account</h5>
-                <div id="accountsContainer" class="row">
-                    </div>
+                <h5 class="mb-3 text-secondary text-uppercase small" data-i18n="monitor_title">Live Monitoring</h5>
+                <div id="accountsContainer" class="row"></div>
             </div>
         </div>
     </div>
 
     <script>
-        // --- LOGICA REFRESH DINAMICO ---
+        // --- TRADUZIONI INTEGRATE ---
+        const translations = {
+            "en": {
+                "add_account": "Add Account",
+                "ph_username": "Steam Username",
+                "ph_password": "Password",
+                "steam_guard": "Steam Guard",
+                "games_label": "Games (CTRL for multiple)",
+                "ph_search": "🔍 Search other games...",
+                "btn_start": "START BOOST",
+                "btn_connecting": "CONNECTING...",
+                "monitor_title": "Live Monitoring",
+                "no_accounts": "No active accounts.",
+                "btn_stop": "STOP SESSION",
+                "btn_cancel": "CANCEL"
+            },
+            "it": {
+                "add_account": "Aggiungi Account",
+                "ph_username": "Username Steam",
+                "ph_password": "Password",
+                "steam_guard": "Steam Guard",
+                "games_label": "Giochi (CTRL per multipli)",
+                "ph_search": "🔍 Cerca altri giochi...",
+                "btn_start": "AVVIA BOOST",
+                "btn_connecting": "CONNESSIONE...",
+                "monitor_title": "Monitoraggio Live",
+                "no_accounts": "Nessun account attivo.",
+                "btn_stop": "FERMA SESSIONE",
+                "btn_cancel": "ANNULLA"
+            }
+        };
+
+        let currentLang = localStorage.getItem('preferredLang') || 'en';
         let pollingInterval = null;
         let currentIntervalTime = null;
 
+        // --- LOGICA LINGUA ---
+        function changeLanguage(lang) {
+            currentLang = lang;
+            localStorage.setItem('preferredLang', lang);
+            
+            // Aggiorna l'interfaccia del pulsante dropdown
+            const flagImg = document.getElementById('currentFlag');
+            const langText = document.getElementById('currentLangText');
+            
+            if (lang === 'en') {
+                flagImg.src = 'assets/gb.png';
+                langText.innerText = 'EN';
+            } else {
+                flagImg.src = 'assets/it.png';
+                langText.innerText = 'IT';
+            }
+
+            applyTranslations();
+            updateStatus();
+        }
+
+        function applyTranslations() {
+            const langData = translations[currentLang];
+            
+            // Sincronizza il pulsante superiore con la lingua salvata
+            const flagImg = document.getElementById('currentFlag');
+            const langText = document.getElementById('currentLangText');
+            flagImg.src = (currentLang === 'en') ? 'assets/gb.png' : 'assets/it.png';
+            langText.innerText = currentLang.toUpperCase();
+
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                const text = langData[key];
+                if (text) {
+                    if (el.tagName === 'INPUT') el.placeholder = text;
+                    else el.innerText = text;
+                }
+            });
+        }
+
+        // --- MONITORAGGIO ---
         async function updateStatus() {
+            const t = translations[currentLang];
+
             try {
                 const response = await fetch('/api/status');
                 const data = await response.json();
                 const container = document.getElementById('accountsContainer');
                 const accountKeys = Object.keys(data);
 
-                // Se non ci sono account, puliamo e fermiamo tutto
                 if (accountKeys.length === 0) {
-                    container.innerHTML = `<div class="col-12 text-center py-5 border rounded border-secondary" style="border-style: dashed; opacity: 0.5;">
-                        <p class="text-secondary mb-0">Nessun account attivo.</p></div>`;
-                    if (pollingInterval) {
-                        clearInterval(pollingInterval);
-                        pollingInterval = null;
-                        currentIntervalTime = null;
-                    }
+                    container.innerHTML = `
+                        <div class="col-12 text-center py-5 border rounded border-secondary" style="border-style: dashed; opacity: 0.5;">
+                            <p class="text-secondary mb-0">${t.no_accounts}</p>
+                        </div>`;
                     return;
                 }
 
-                // Generazione HTML card
                 const needsFastRefresh = accountKeys.some(user => data[user].running === false);
                 let html = '';
+                
                 for (const [user, info] of Object.entries(data)) {
+                    const statusToShow = info.status; 
+                    const btnLabel = info.running ? t.btn_stop : t.btn_cancel;
                     const pulseClass = !info.running ? 'status-pulse' : '';
+                    
                     html += `
                         <div class="col-md-6 mb-3">
                             <div class="card bg-dark border-${info.color} shadow-sm h-100 ${pulseClass}">
@@ -122,49 +211,47 @@
                                     <div class="d-flex justify-content-between align-items-start mb-2">
                                         <div>
                                             <h6 class="card-title mb-0 text-white">${user}</h6>
-                                            <small class="text-${info.color} fw-bold">● ${info.status}</small>
+                                            <small class="text-${info.color} fw-bold">● ${statusToShow}</small>
                                         </div>
                                         <button onclick="stopAccount('${user}')" class="btn-close btn-close-white" style="font-size: 0.7rem;"></button>
                                     </div>
                                     <div class="row g-2 mb-3 mt-1">
                                         <div class="col-6"><div class="stat-box text-center"><small>${info.startDate || '--/--'}</small></div></div>
-                                        <div class="col-6"><div class="stat-box text-center border-primary border-opacity-25"><span class="fw-bold">+${info.hours}h</span></div></div>
+                                        <div class="col-6"><div class="stat-box text-center border-primary border-opacity-25"><span class="fw-bold">+${info.hours}</span></div></div>
                                     </div>
                                     <div class="p-2 bg-black bg-opacity-25 rounded mb-3"><div class="small text-truncate text-info" style="font-size: 0.65rem;">${info.games.join(', ')}</div></div>
-                                    <button onclick="stopAccount('${user}')" class="btn btn-outline-${info.color} btn-sm w-100">${info.running ? 'FERMA SESSIONE' : 'ANNULLA'}</button>
+                                    <button onclick="stopAccount('${user}')" class="btn btn-outline-${info.color} btn-sm w-100">${btnLabel}</button>
                                 </div>
                             </div>
                         </div>`;
                 }
                 container.innerHTML = html;
 
-                // Gestione frequenza aggiornamento
                 const nextIntervalTime = needsFastRefresh ? 2000 : 30000;
                 if (currentIntervalTime !== nextIntervalTime) {
                     clearInterval(pollingInterval);
                     pollingInterval = setInterval(updateStatus, nextIntervalTime);
                     currentIntervalTime = nextIntervalTime;
                 }
-
             } catch (e) { console.error("Errore polling:", e); }
         }
 
-        // --- FUNZIONI AZIONE ---
+        // --- AZIONI ---
         async function stopAccount(user) {
             const formData = new URLSearchParams();
             formData.append('username', user);
             await fetch('/stop', { method: 'POST', body: formData });
-            updateStatus(); // Aggiorna subito la lista
+            updateStatus();
         }
 
-        const mainForm = document.getElementById('mainForm');
-        mainForm.onsubmit = function() {
+        document.getElementById('mainForm').onsubmit = function() {
+            const t = translations[currentLang];
             document.getElementById('submitBtn').disabled = true;
-            document.getElementById('btnText').innerText = "CONNESSIONE...";
+            document.getElementById('btnText').innerText = t.btn_connecting;
             document.getElementById('btnSpinner').style.display = "inline-block";
             
-            // Forza l'avvio del monitoraggio rapido per vedere l'esito del login
-            if (!pollingInterval) {
+            if (!pollingInterval || currentIntervalTime !== 2000) {
+                clearInterval(pollingInterval);
                 pollingInterval = setInterval(updateStatus, 2000);
                 currentIntervalTime = 2000;
             }
@@ -208,8 +295,12 @@
             }, 400);
         };
 
-        // Avvio iniziale silenzioso (solo una volta)
-        updateStatus();
+        // --- AVVIO ---
+        window.onload = () => {
+            applyTranslations();
+            updateStatus();
+        };
     </script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
