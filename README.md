@@ -23,8 +23,8 @@
 
 1. **Clone the repository**:
    ```
-   git clone https://github.com/LoStelo/Steam-Hour-Booster- 
-   cd Steam-Hour-Booster-
+   git clone https://github.com/LoStelo/SteamWebBooster 
+   cd SteamWebBooster
    ```
 
 2. **Install dependencies**:
