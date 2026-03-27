@@ -5,10 +5,11 @@
 ---
 
 ## ✨ Features
-* 🚀 **Direct Login**: Enter your credentials and Steam Guard (2FA) code in a single, simple interface.
+* 🚀 **Smart UI (v2.0)**: A new dynamic dashboard to seamlessly enter credentials, Steam Guard (2FA) codes, and select games. Active sessions now update in real-time without requiring a page refresh.
 * 🛡️ **Session Security**: Automatically handles Sentry files to remember your machine and avoid repeated 2FA requests.
 * 📊 **Web Dashboard**: A clean UI to monitor your boosting status and switch games on the fly.
-* ⚙️ **Game Flexibility**: Choose from a list of popular games or manually enter any **AppID**.
+* 📊 **Live Monitoring**: Real-time status tracking with adaptive polling (saves data and CPU).
+* ⚙️ **Game Flexibility**: Search and add any Steam game via the integrated search bar or select from presets.
 * 📉 **High Efficiency**: Extremely low resource footprint (<70MB RAM).
 
 ---
@@ -40,13 +41,13 @@ The interface will be accessible at http://YOUR-SERVER-IP:8000.
 ## 🔄 Running 24/7 (Recommended)
 To ensure the app stays active even after closing the terminal or restarting the server, using PM2 is highly recommended:
 ```
-# Installa PM2 globalmente
+# Install PM2 globally
 npm install pm2 -g
 
-# Avvia il booster
+# Start the booster
 pm2 start server.js --name "steam-booster"
 
-# Configura l'avvio al boot
+# Configure auto-start on boot
 pm2 startup
 pm2 save
 ```
@@ -54,6 +55,7 @@ pm2 save
 ## ⚠️ Security Notes
 - Sentry.bin: This file is generated after your first successful login. It acts as a secure access "token." Never upload this file to GitHub or share it with others. 🔐
 - Steam Guard: You must have the Steam Mobile App ready to generate the required code for the initial login.
+- Smart Refresh: Starting from v2.0, the dashboard intelligently slows down once your status is "Running" to minimize server impact.
 
-## 📝 Licence
+## 📝 License
 This project is distributed under the MIT License.

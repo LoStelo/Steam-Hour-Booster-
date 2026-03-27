@@ -1,144 +1,215 @@
 <!DOCTYPE html>
-<html>
+<html lang="it">
 <head>
+    <meta charset="UTF-8">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <title>Steam Web Booster</title>
     <style>
-        body { background-color: #1a1d20; }
-        .form-control, .form-select { 
-            background-color: #2b2f32; 
-            border-color: #495057; 
-            color: white; 
-        }
-        .form-control:focus, .form-select:focus { 
-            background-color: #2b2f32; 
-            color: white; 
-            border-color: #0d6efd; 
-            box-shadow: none; 
-        }
-        .form-control::placeholder {
-            color: #6c757d;
-            opacity: 1;
-        }
+        body { background-color: #1a1d20; color: white; }
+        .form-control, .form-select { background-color: #2b2f32; border-color: #495057; color: white; }
+        ::placeholder { color: #adb5bd !important; opacity: 1; }
+        .form-control:focus, .form-select:focus { background-color: #2b2f32; color: white; border-color: #0d6efd; box-shadow: none; }
         .text-info-custom { color: #0dcaf0; font-weight: bold; }
-        .card-custom {
-            background-color: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-        .version-badge {
-            font-size: 0.4em;
-            vertical-align: middle;
-            background-color: #198754;
-            padding: 2px 6px;
-            border-radius: 4px;
-            letter-spacing: 1px;
-        }
+        .card-custom { background-color: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); }
+        .version-badge { font-size: 0.5em; background-color: #0d6efd; padding: 2px 8px; border-radius: 4px; }
+        select[multiple] { height: 120px; }
+        option:checked { background-color: #0d6efd !important; }
+        .stat-box { background-color: rgba(0, 0, 0, 0.3); color: #adb5bd !important; border: 1px solid rgba(255, 255, 255, 0.05); padding: 8px; border-radius: 6px; }
+        #searchResults { z-index: 1050; max-height: 250px; overflow-y: auto; }
+        .search-item { cursor: pointer; border-bottom: 1px solid #3d4144; }
+        .search-item:hover { background-color: #3d4144 !important; }
+        
+        /* Animazione per lo stato "In attivazione" */
+        .status-pulse { animation: pulse-red 2s infinite; }
+        @keyframes pulse-red { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
     </style>
 </head>
-<body class="text-white p-5">
-    <div class="container mt-5" style="max-width: 450px;">
-        <h2 class="text-center mb-4">
-            Steam Booster <span class="version-badge">v1.1</span>
-        </h2>
+<body class="p-4">
+    <div class="container">
+        <h2 class="text-center mb-5">Steam Booster <span class="version-badge">v2.0</span></h2>
 
-        <% if (session.running) { %>
-            <div class="card bg-success p-4 text-center text-white border-0 shadow">
-                <h4 class="mb-2">⚡ BOOSTING IN CORSO ⚡</h4>
-                <hr class="opacity-25">
-                <div class="mb-1">Account: <strong><%= session.username %></strong></div>
-                <div>Gioco: <strong><%= session.game_name %></strong></div>
-            </div>
-            <form action="/stop" method="post" class="mt-3">
-                <button class="btn btn-danger w-100 fw-bold shadow py-2">FERMA SESSIONE</button>
-            </form>
-
-        <% } else { %>
-            <form action="/start" method="post" class="card card-custom p-4 shadow">
-                <% if (session.error) { %>
-                    <div class="alert alert-danger p-2 small text-center"><%= session.error %></div>
-                <% } %>
-                
-                <div class="mb-3">
-                    <label class="small text-secondary mb-1">Dati Account</label>
-                    <input type="text" name="username" class="form-control mb-2" placeholder="Username" required>
-                    <input type="password" name="password" class="form-control" placeholder="Password" required>
-                </div>
-
-                <div class="mb-3">
-                    <label class="small text-info-custom mb-1">Steam Guard (Codice App)</label>
-                    <input type="text" 
-                        name="auth_code" 
-                        class="form-control border-info text-center fw-bold text-uppercase" 
-                        placeholder="ABC12" 
-                        minlength="5" 
-                        maxlength="5" 
-                        pattern="[a-zA-Z0-9]{5}"
-                        style="letter-spacing: 3px; font-size: 1.2rem;" 
-                        required>
-                </div>
-                
-                <div class="mb-4">
-                    <label class="small text-secondary mb-1">Gioco da Boostare</label>
-                    <select name="game_id" id="gameSelect" class="form-select mb-2" onchange="toggleCustomInput()" required>
-                        <option value="252490">Rust</option>
-                        <option value="730">Counter-Strike 2</option>
-                        <option value="1808500">ARC Raiders</option>
-                        <option value="218620">PAYDAY 2</option>
-                        <option value="230410">Warframe</option>
-                        <option value="221100">DayZ</option>
-                        <option value="4000">Garry's Mod</option>
-                        <option value="107410">Arma 3</option>
-                        <option value="2799860">Inazuma Eleven: Victory Road</option>
-                        <option value="custom">-- Altro (Inserisci ID manualmente) --</option>
-                    </select>
+        <div class="row">
+            <div class="col-lg-4 mb-4">
+                <div class="card card-custom p-4 shadow">
+                    <h5 class="mb-3 text-info-custom text-center text-uppercase">Aggiungi Account</h5>
                     
-                    <input type="number" id="customInput" class="form-control border-warning" 
-                           placeholder="Inserisci AppID (es. 440)" style="display: none;">
+                    <% if (session.error) { %>
+                        <div class="alert alert-danger p-2 small text-center"><%= session.error %></div>
+                    <% } %>
+
+                    <form action="/start" method="post" id="mainForm">
+                        <div class="mb-3">
+                            <input type="text" name="username" class="form-control mb-2" placeholder="Username Steam" required>
+                            <input type="password" name="password" class="form-control" placeholder="Password" required>
+                        </div>
+
+                        <div class="mb-3 text-center">
+                            <label class="small text-info-custom mb-1">Steam Guard</label>
+                            <input type="text" name="auth_code" class="form-control border-info text-center fw-bold text-uppercase" 
+                                   placeholder="ABC12" minlength="5" maxlength="5" pattern="[a-zA-Z0-9]{5}" required>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="small text-secondary mb-1 d-block text-center">Giochi (CTRL per multipli)</label>
+                            <select name="game_ids" id="gameSelect" class="form-select mb-2" multiple required>
+                                <option value="252490">Rust</option>
+                                <option value="730">Counter-Strike 2</option>
+                                <option value="1808500">ARC Raiders</option>
+                                <option value="218620">PAYDAY 2</option>
+                                <option value="230410">Warframe</option>
+                                <option value="221100">DayZ</option>
+                                <option value="4000">Garry's Mod</option>
+                                <option value="107410">Arma 3</option>
+                                <option value="2799860">Inazuma Eleven: Victory Road</option>
+                            </select>
+
+                            <div class="position-relative">
+                                <input type="text" id="gameSearchInput" class="form-control form-control-sm border-info" placeholder="🔍 Cerca altri giochi...">
+                                <div id="searchResults" class="list-group position-absolute w-100 d-none shadow-lg"></div>
+                            </div>
+                            <div id="customNamesContainer"></div> 
+                        </div>
+
+                        <button type="submit" id="submitBtn" class="btn btn-primary w-100 fw-bold py-3 shadow d-flex align-items-center justify-content-center">
+                            <span id="btnText">AVVIA BOOST</span>
+                            <div id="btnSpinner" class="spinner-border spinner-border-sm ms-2" role="status" style="display: none;"></div>
+                        </button>
+                    </form>
                 </div>
+            </div>
 
-                <button type="submit" id="submitBtn" class="btn btn-primary w-100 fw-bold py-3 shadow d-flex align-items-center justify-content-center">
-                    <span id="btnText">ACCEDI E AVVIA BOOST</span>
-                    <div id="btnSpinner" class="spinner-border spinner-border-sm ms-2" role="status" style="display: none;">
-                        <span class="visually-hidden">Loading...</span>
+            <div class="col-lg-8">
+                <h5 class="mb-3 text-secondary text-uppercase small">Monitoraggio Live Account</h5>
+                <div id="accountsContainer" class="row">
                     </div>
-                </button>
-
-                <script>
-                    const form = document.querySelector('form');
-                    const btn = document.getElementById('submitBtn');
-                    const btnText = document.getElementById('btnText');
-                    const btnSpinner = document.getElementById('btnSpinner');
-
-                    if (form && btn) {
-                        form.onsubmit = function() {
-                            btn.disabled = true;
-                            btn.classList.replace('btn-primary', 'btn-secondary');
-                            btnText.innerText = "CONTROLLO CREDENZIALI...";
-                            btnSpinner.style.display = "inline-block";
-                            return true; 
-                        };
-                    }
-                </script>
-            </form>
-        <% } %>
+            </div>
+        </div>
     </div>
 
     <script>
-        function toggleCustomInput() {
-            var select = document.getElementById("gameSelect");
-            var input = document.getElementById("customInput");
-            if (select.value === "custom") {
-                input.style.display = "block";
-                input.required = true;
-                input.name = "game_id"; 
-                select.name = "old_game_id"; 
-            } else {
-                input.style.display = "none";
-                input.required = false;
-                input.name = "custom_game_id";
-                select.name = "game_id"; 
-            }
+        // --- LOGICA REFRESH DINAMICO ---
+        let pollingInterval = null;
+        let currentIntervalTime = null;
+
+        async function updateStatus() {
+            try {
+                const response = await fetch('/api/status');
+                const data = await response.json();
+                const container = document.getElementById('accountsContainer');
+                const accountKeys = Object.keys(data);
+
+                // Se non ci sono account, puliamo e fermiamo tutto
+                if (accountKeys.length === 0) {
+                    container.innerHTML = `<div class="col-12 text-center py-5 border rounded border-secondary" style="border-style: dashed; opacity: 0.5;">
+                        <p class="text-secondary mb-0">Nessun account attivo.</p></div>`;
+                    if (pollingInterval) {
+                        clearInterval(pollingInterval);
+                        pollingInterval = null;
+                        currentIntervalTime = null;
+                    }
+                    return;
+                }
+
+                // Generazione HTML card
+                const needsFastRefresh = accountKeys.some(user => data[user].running === false);
+                let html = '';
+                for (const [user, info] of Object.entries(data)) {
+                    const pulseClass = !info.running ? 'status-pulse' : '';
+                    html += `
+                        <div class="col-md-6 mb-3">
+                            <div class="card bg-dark border-${info.color} shadow-sm h-100 ${pulseClass}">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-start mb-2">
+                                        <div>
+                                            <h6 class="card-title mb-0 text-white">${user}</h6>
+                                            <small class="text-${info.color} fw-bold">● ${info.status}</small>
+                                        </div>
+                                        <button onclick="stopAccount('${user}')" class="btn-close btn-close-white" style="font-size: 0.7rem;"></button>
+                                    </div>
+                                    <div class="row g-2 mb-3 mt-1">
+                                        <div class="col-6"><div class="stat-box text-center"><small>${info.startDate || '--/--'}</small></div></div>
+                                        <div class="col-6"><div class="stat-box text-center border-primary border-opacity-25"><span class="fw-bold">+${info.hours}h</span></div></div>
+                                    </div>
+                                    <div class="p-2 bg-black bg-opacity-25 rounded mb-3"><div class="small text-truncate text-info" style="font-size: 0.65rem;">${info.games.join(', ')}</div></div>
+                                    <button onclick="stopAccount('${user}')" class="btn btn-outline-${info.color} btn-sm w-100">${info.running ? 'FERMA SESSIONE' : 'ANNULLA'}</button>
+                                </div>
+                            </div>
+                        </div>`;
+                }
+                container.innerHTML = html;
+
+                // Gestione frequenza aggiornamento
+                const nextIntervalTime = needsFastRefresh ? 2000 : 30000;
+                if (currentIntervalTime !== nextIntervalTime) {
+                    clearInterval(pollingInterval);
+                    pollingInterval = setInterval(updateStatus, nextIntervalTime);
+                    currentIntervalTime = nextIntervalTime;
+                }
+
+            } catch (e) { console.error("Errore polling:", e); }
         }
+
+        // --- FUNZIONI AZIONE ---
+        async function stopAccount(user) {
+            const formData = new URLSearchParams();
+            formData.append('username', user);
+            await fetch('/stop', { method: 'POST', body: formData });
+            updateStatus(); // Aggiorna subito la lista
+        }
+
+        const mainForm = document.getElementById('mainForm');
+        mainForm.onsubmit = function() {
+            document.getElementById('submitBtn').disabled = true;
+            document.getElementById('btnText').innerText = "CONNESSIONE...";
+            document.getElementById('btnSpinner').style.display = "inline-block";
+            
+            // Forza l'avvio del monitoraggio rapido per vedere l'esito del login
+            if (!pollingInterval) {
+                pollingInterval = setInterval(updateStatus, 2000);
+                currentIntervalTime = 2000;
+            }
+        };
+
+        // --- RICERCA GIOCHI ---
+        const searchInput = document.getElementById('gameSearchInput');
+        const resultsDiv = document.getElementById('searchResults');
+        const gameSelect = document.getElementById('gameSelect');
+        const customNamesContainer = document.getElementById('customNamesContainer');
+        let searchTimeout = null;
+
+        searchInput.oninput = function() {
+            clearTimeout(searchTimeout);
+            const val = this.value.trim();
+            if (val.length < 2) { resultsDiv.classList.add('d-none'); return; }
+
+            searchTimeout = setTimeout(async () => {
+                const res = await fetch(`/search-game?term=${encodeURIComponent(val)}`);
+                const games = await res.json();
+                resultsDiv.innerHTML = '';
+                if (games.length > 0) {
+                    games.forEach(g => {
+                        const row = document.createElement('div');
+                        row.className = 'list-group-item search-item bg-dark text-white d-flex align-items-center p-2';
+                        row.innerHTML = `<img src="${g.icon}" class="me-2" style="width:25px"> <span class="small">${g.name}</span>`;
+                        row.onclick = () => {
+                            if (![...gameSelect.options].some(o => o.value == g.id)) {
+                                const opt = new Option(g.name, g.id);
+                                opt.selected = true;
+                                gameSelect.add(opt);
+                                customNamesContainer.innerHTML += `<input type="hidden" name="custom_names[${g.id}]" value="${g.name}">`;
+                            }
+                            resultsDiv.classList.add('d-none');
+                            searchInput.value = '';
+                        };
+                        resultsDiv.appendChild(row);
+                    });
+                    resultsDiv.classList.remove('d-none');
+                }
+            }, 400);
+        };
+
+        // Avvio iniziale silenzioso (solo una volta)
+        updateStatus();
     </script>
 </body>
 </html>
