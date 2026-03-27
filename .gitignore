@@ -1,0 +1,23 @@
+# Dependecies
+node_modules/
+jspm_packages/
+
+# Log files
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+logs
+*.log
+
+# Sensible files
+sentry.bin
+.env
+
+# System folders / IDE
+.DS_Store
+.vscode/
+.idea/
+
+# Build Files
+dist/
+build/
