@@ -55,5 +55,5 @@ pm2 save
 - Sentry.bin: This file is generated after your first successful login. It acts as a secure access "token." Never upload this file to GitHub or share it with others. 🔐
 - Steam Guard: You must have the Steam Mobile App ready to generate the required code for the initial login.
 
-## 📝 Licenza
+## 📝 Licence
 This project is distributed under the MIT License.
