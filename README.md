@@ -1,4 +1,4 @@
-# ⚡Steam Web Booster v1.1
+# ⚡Steam Web Booster v2.0
 
 **Steam Web Booster** is a lightweight **Node.js** web application designed to automatically increase your "hours played" on any Steam game. It is optimized to run 24/7 on dedicated servers, VPS, or containers (such as Proxmox LXC). 🎮
 
