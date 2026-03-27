@@ -58,4 +58,4 @@ pm2 save
 - Smart Refresh: Starting from v2.0, the dashboard intelligently slows down once your status is "Running" to minimize server impact.
 
 ## 📝 License
-This project is distributed under the MIT License.
+This project is distributed under the MIT License. 
